@@ -36,10 +36,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-// app.get('/all-studios', async (req,res) => {
-//   const studios = await allStudios.find().toArray();
-//   res.json(studios);
-// });
+app.get('/all-studios', async (req,res) => {
+  const studios = await allStudios.find().toArray();
+  res.json(studios);
+});
 
 app.post('/add-studios', async (req, res)=>{
   const studio = req.body;
