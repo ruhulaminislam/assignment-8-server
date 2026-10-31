@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config'
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 
 import multer from 'multer';
 const upload = multer({
@@ -39,6 +39,12 @@ app.get('/', (req, res) => {
 app.get('/all-studios', async (req,res) => {
   const studios = await allStudios.find().toArray();
   res.json(studios);
+});
+
+app.get('/studios/:id', async (req,res) => {
+
+  const studio = await allStudios.findOne({ _id: new ObjectId(req.params.id) });
+  res.send(studio);
 });
 
 app.post('/add-studios', async (req, res)=>{
