@@ -21,7 +21,9 @@ export async function connectToMongoDB() {
     console.dir(err);
   }
 }
-connectToMongoDB()
+const momgodbCoectiion= await connectToMongoDB()
+const db = momgodbCoectiion.db("StudioSpace")
+const allStudios = db.collection("all-studios");
 //connect to MongoDB
 
 
@@ -29,6 +31,10 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.get('/all-studios', async (req,res) => {
+  const studios = await allStudios.find().toArray();
+  res.json(studios);
+});
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
