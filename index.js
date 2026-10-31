@@ -50,6 +50,12 @@ app.get('/featured-studios', async (req, res) =>{
   const result = await allStudios.find().sort({_id:-1}).limit(6).toArray();
   res.json(result);
 });
+app.get('/my-listings/:email', async (req, res) =>{
+  const email = req.params.email;
+  const result = await allStudios.find({ useremail:email }).toArray();
+  res.send(result);
+});
+
 
 
 app.post('/add-studios', async (req, res)=>{
