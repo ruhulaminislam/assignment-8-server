@@ -46,11 +46,16 @@ app.get('/studios/:id', async (req,res) => {
   const studio = await allStudios.findOne({ _id: new ObjectId(req.params.id) });
   res.send(studio);
 });
+app.get('/featured-studios', async (req, res) =>{
+  const result = await allStudios.find().sort({_id:-1}).limit(6).toArray();
+  res.json(result);
+});
+
 
 app.post('/add-studios', async (req, res)=>{
   const studio = req.body;
   const result = await allStudios.insertOne(studio);
-  res.json(result);
+  res.send(result);
 });
 
 app.post('/upload-image', upload.single('image'), async (req, res) => {
