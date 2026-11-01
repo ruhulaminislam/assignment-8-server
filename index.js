@@ -29,6 +29,7 @@ export async function connectToMongoDB() {
 const momgodbCoectiion= await connectToMongoDB()
 const db = momgodbCoectiion.db("StudioSpace")
 const allStudios = db.collection("studios");
+const BookingCollection = db.collection("bookings");
 //connect to MongoDB
 
 
@@ -63,13 +64,26 @@ app.post('/add-studios', async (req, res)=>{
   const result = await allStudios.insertOne(studio);
   res.send(result);
 });
-
+app.patch("/studios-update/:id", async (req, res) => {
+  const id = req.params.id;
+  const updatedStudio = req.body;
+  const result = await allStudios.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updatedStudio }
+  );
+  res.send(result);
+});
 app.delete("/studios/:id", async (req, res) => {
   const id = req.params.id;
   const result = await allStudios.deleteOne({_id:new ObjectId(id)});
   res.send(result);
 });
 
+app.post('/bookings', async (req, res) => {
+  const booking = req.body;
+  const result = await BookingCollection.insertOne(booking);
+  res.send(result);
+})
 
 
 app.post('/upload-image', upload.single('image'), async (req, res) => {
