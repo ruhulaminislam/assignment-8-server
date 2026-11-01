@@ -36,6 +36,8 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+
+
 app.get('/all-studios', async (req,res) => {
   const studios = await allStudios.find().toArray();
   res.json(studios);
@@ -56,13 +58,19 @@ app.get('/my-listings/:email', async (req, res) =>{
   res.send(result);
 });
 
-
-
 app.post('/add-studios', async (req, res)=>{
   const studio = req.body;
   const result = await allStudios.insertOne(studio);
   res.send(result);
 });
+
+app.delete("/studios/:id", async (req, res) => {
+  const id = req.params.id;
+  const result = await allStudios.deleteOne({_id:new ObjectId(id)});
+  res.send(result);
+});
+
+
 
 app.post('/upload-image', upload.single('image'), async (req, res) => {
   try {
