@@ -4,6 +4,7 @@ import 'dotenv/config'
 import { MongoClient, ObjectId } from 'mongodb';
 
 import multer from 'multer';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 const upload = multer({
   storage: multer.memoryStorage()
 });
@@ -14,6 +15,28 @@ const port = 5000;
 //middleware to allow cross-origin requests
  app.use(cors());
 app.use(express.json());
+
+//middleware to parse incoming JSON requests
+const verifiToken= async(req,res,next)=>{
+  const authHeader=req.headers.authorization
+  if(!authHeader){
+     return res.status(401).send({mes:"not autheratization"})
+  }
+  const token=authHeader.split(" ")[1]
+  console.log(token)
+  if(!token){
+    return res.status(401).send({mes:"not autheratization"})
+  }
+  const JWKS=createRemoteJWKSet(new URL(`${process.env.Client_URL}/api/auth/jwks`))
+  try {
+     const { payload }=await jwtVerify(token,JWKS)
+       next()
+     
+  } catch (error) {
+    return res.status(401).send({mes:"not authorization"})
+  }
+ 
+}
 // connect to MongoDB
 
 const client = new MongoClient(process.env.MONGODB_URI);
@@ -59,7 +82,7 @@ app.get('/my-listings/:email', async (req, res) =>{
   res.send(result);
 });
 
-app.post('/add-studios', async (req, res)=>{
+app.post('/add-studios', verifiToken, async (req, res)=>{
   const studio = req.body;
   const result = await allStudios.insertOne(studio);
   res.send(result);
@@ -73,18 +96,43 @@ app.patch("/studios-update/:id", async (req, res) => {
   );
   res.send(result);
 });
-app.delete("/studios/:id", async (req, res) => {
+app.delete("/studios/:id", verifiToken, async (req, res) => {
   const id = req.params.id;
   const result = await allStudios.deleteOne({_id:new ObjectId(id)});
   res.send(result);
 });
-
-app.post('/bookings', async (req, res) => {
+//booking api
+app.post('/bookings', verifiToken, async (req, res) => {
   const booking = req.body;
+    const existingBookings = await BookingCollection.find({
+    studioId: booking.studioId,
+    bookingDate: booking.bookingDate,
+    status: { $ne: "Cancelled" }
+  }).toArray();
+   const isBooked = existingBookings.some((existing) => {
+    return (
+      new Date(booking.startDate) < new Date(existing.endDate) &&
+      new Date(booking.endDate) > new Date(existing.startDate)
+    );
+  });
+    if (isBooked) {
+    return res.status(409).send({
+      message: "This studio is already booked for this time."
+    });}
   const result = await BookingCollection.insertOne(booking);
   res.send(result);
 })
-
+app.get("/my-bookings/:email", async (req, res) => {
+  const email = req.params.email;
+  const result = await BookingCollection.find({ userEmail: email }).toArray();
+  res.send(result);
+});
+app.patch("/cancel-booking", async (req, res) => {
+  const {id,status} = req.body
+  
+  const result = await BookingCollection.updateOne({ _id: new ObjectId(id) }, {$set:{status:status}} )
+  res.send(result);
+})
 
 app.post('/upload-image', upload.single('image'), async (req, res) => {
   try {
@@ -109,3 +157,5 @@ app.post('/upload-image', upload.single('image'), async (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+export default app
