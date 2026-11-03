@@ -30,6 +30,7 @@ const verifiToken= async(req,res,next)=>{
   const JWKS=createRemoteJWKSet(new URL(`${process.env.Client_URL}/api/auth/jwks`))
   try {
      const { payload }=await jwtVerify(token,JWKS)
+      req.user = payload;
        next()
      
   } catch (error) {
@@ -87,7 +88,7 @@ app.post('/add-studios', verifiToken, async (req, res)=>{
   const result = await allStudios.insertOne(studio);
   res.send(result);
 });
-app.patch("/studios-update/:id", async (req, res) => {
+app.patch("/studios-update/:id",verifiToken, async (req, res) => {
   const id = req.params.id;
   const updatedStudio = req.body;
 
