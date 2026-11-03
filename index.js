@@ -27,7 +27,7 @@ const verifiToken= async(req,res,next)=>{
   if(!token){
     return res.status(401).send({mes:"not autheratization"})
   }
-  const JWKS=createRemoteJWKSet(new URL(`${process.env.Client_URL}/api/auth/jwks`))
+  const JWKS=createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`))
   try {
      const { payload }=await jwtVerify(token,JWKS)
        next()
