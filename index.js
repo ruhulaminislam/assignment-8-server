@@ -90,10 +90,36 @@ app.post('/add-studios', verifiToken, async (req, res)=>{
 app.patch("/studios-update/:id", async (req, res) => {
   const id = req.params.id;
   const updatedStudio = req.body;
+
+  // JWT থেকে পাওয়া authenticated user
+  const userEmail = req.user.email;
+
+  // Studio খুঁজে বের করো
+  const studio = await allStudios.findOne({
+    _id: new ObjectId(id),
+  });
+
+  if (!studio) {
+    return res.status(404).send({
+      message: "Studio not found",
+    });
+  }
+
+  // Owner Email যাচাই
+  if (studio.useremail !== userEmail) {
+    return res.status(403).send({
+      message: "You are not authorized to update this studio",
+    });
+  }
+
+  // Owner হলে Update
+  delete updatedStudio.useremail;
+
   const result = await allStudios.updateOne(
     { _id: new ObjectId(id) },
     { $set: updatedStudio }
   );
+
   res.send(result);
 });
 app.delete("/studios/:id", verifiToken, async (req, res) => {
